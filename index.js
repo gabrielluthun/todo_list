@@ -1,8 +1,11 @@
 let taskList = document.getElementById('taskList');
 
-//Sauvegarder en local storage les tâches
-let localStorageTasks = JSON.parse(localStorage.getItem('tasks')) || '[]';
+// Sauvegarder en local storage les tâches
+let Tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
+function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(Tasks));
+}
 
 function addTask() {
     let taskInput = document.getElementById('taskInput');
@@ -11,40 +14,18 @@ function addTask() {
         return;
     }
 
-    var li = document.createElement('li');
-    li.innerHTML = taskText;
-
-
-    var editButton = document.createElement('button');
-    editButton.innerHTML = '<ion-icon name="pencil-outline" class="modify"></ion-icon>';
-
-    editButton.onclick = function () {
-        editTask(li);
-    }
-
-    let deleteButton = document.createElement('button');
-    deleteButton.innerHTML = '<ion-icon name="trash" class="delete"></ion-icon>';
-
-    deleteButton.onclick = function () {
-        deleteTask(li);
-    }
-
-    li.appendChild(editButton);
-    li.appendChild(deleteButton);
-
+    let li = createTaskElement(taskText);
     taskList.appendChild(li);
 
     taskInput.value = "";
 
-    localStorageTasks.push(taskText);
-    localStorage.setItem('tasks', JSON.stringify(localStorageTasks));
-
+    Tasks.push(taskText);
+    saveTasks();
 }
 
 function editTask(task) {
     let taskTextElement = task.firstChild;
     let taskText = taskTextElement.textContent;
-
 
     let newTaskText = prompt('Modifier la tâche : ', taskText);
     if (newTaskText === null || newTaskText === '') {
@@ -52,45 +33,52 @@ function editTask(task) {
     }
 
     taskTextElement.textContent = newTaskText;
+
+    let index = Tasks.indexOf(taskText);
+    if (index !== -1) {
+        Tasks[index] = newTaskText;
+        saveTasks();
+    }
 }
 
 function deleteTask(task) {
+    let taskText = task.firstChild.textContent;
+    let index = Tasks.indexOf(taskText);
+    if (index !== -1) {
+        Tasks.splice(index, 1);
+        saveTasks();
+    }
     taskList.removeChild(task);
 }
 
 function createTaskElement(taskText) {
-    var li = document.createElement("li");
+    let li = document.createElement("li");
     li.innerHTML = taskText;
-  
-    var editButton = document.createElement("button");
+
+    let editButton = document.createElement("button");
     editButton.innerHTML = '<ion-icon name="pencil-outline" class="modify"></ion-icon>';
     editButton.onclick = function() {
-      editTask(li);
-      localStorageTasks.splice(localStorageTasks.indexOf(taskText), 1, li.textContent);
-      localStorage.setItem('tasks', JSON.stringify(localStorageTasks)); 
+        editTask(li);
     };
-  
-    var deleteButton = document.createElement("button");
+
+    let deleteButton = document.createElement("button");
     deleteButton.innerHTML = '<ion-icon name="trash-outline" class="delete"></ion-icon>';
     deleteButton.onclick = function() {
-      deleteTask(li);
-        localStorageTasks.splice(localStorageTasks.indexOf(taskText), 1);
-      localStorage.setItem('tasks', JSON.stringify(localStorageTasks));
+        deleteTask(li);
     };
-  
+
     li.appendChild(editButton);
     li.appendChild(deleteButton);
-  
+
     return li;
-  }
-
-window.onload = function () {
-    var localStorageTasks = JSON.parse(localStorage.getItem('tasks')) || "[]";
-
-    for (let i = 0; i < localStorageTasks.length; i++) {
-        let li = createTaskElement(localStorageTasks[i]);
-        taskList.appendChild(li);
-
-
-    }
 }
+
+function loadTasks() {
+    Tasks.forEach(taskText => {
+        let li = createTaskElement(taskText);
+        taskList.appendChild(li);
+    });
+}
+
+// Charger les tâches au démarrage
+loadTasks();
